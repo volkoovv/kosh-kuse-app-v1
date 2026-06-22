@@ -14,7 +14,7 @@ const DEFAULT_TWEAKS = /*EDITMODE-BEGIN*/{
 const SEED_NOTIFS = [
   { id: 1, unread: true, title: 'Кусь', when: '15&nbsp;мин', body: 'Утреннее наблюдение: Луна вчера не отметилась в&nbsp;активности. Проверим?', icon: <IconPaw size={16} color="#000"/>, bg: 'var(--kk-pink)' },
   { id: 2, unread: true, title: 'Пора попить', when: '2&nbsp;ч', body: 'Не забудьте поменять воду. Свежая вода — половина успеха питания.', icon: <IconDrop size={16} color="var(--kk-blue-ink)"/>, bg: 'var(--kk-blue-bg)' },
-  { id: 3, unread: false, title: 'Бета · 25 000', when: 'вчера', body: 'Спасибо, что вошли в&nbsp;ранний доступ. Первые подписки — в&nbsp;июле.', icon: <IconGift size={16} color="var(--kk-warm-ink)"/>, bg: 'var(--kk-warm-bg)' },
+  { id: 3, unread: false, title: 'Бета · 500', when: 'вчера', body: 'Спасибо, что вошли в&nbsp;ранний доступ. Первые подписки — в&nbsp;июле.', icon: <IconGift size={16} color="var(--kk-warm-ink)"/>, bg: 'var(--kk-warm-bg)' },
   { id: 4, unread: false, title: 'Игра вечером', when: 'вчера', body: '15&nbsp;минут активности после&nbsp;19:00 поможет Луне крепко спать ночью.', icon: <IconPlay size={14} color="#000"/>, bg: 'var(--kk-pink)' },
   { id: 5, unread: false, title: 'История', when: '2&nbsp;дня', body: 'Появился новый сюжет: «Нормы для&nbsp;метисов». Загляните на&nbsp;главный экран.', icon: <IconBook size={16}/>, bg: 'var(--kk-bg-soft)' },
 ];
@@ -392,7 +392,7 @@ function App() {
       openSheet({
         icon: <IconGift size={26} color="#000"/>, iconBg: 'var(--kk-success-bg)',
         title: 'Подписка на&nbsp;корм — в&nbsp;июле',
-        body: 'Сейчас вы в&nbsp;бета-группе из&nbsp;25&nbsp;000. Когда корм будет готов — увидите тарифы и&nbsp;калькулятор порции прямо здесь.<br/><br/>Мы сообщим в&nbsp;первую очередь.',
+        body: 'Сейчас вы в&nbsp;бета-группе из&nbsp;500. Когда корм будет готов — увидите тарифы и&nbsp;калькулятор порции прямо здесь.<br/><br/>Мы сообщим в&nbsp;первую очередь.',
         primaryLabel: 'Хорошо',
       });
     }

@@ -48,7 +48,7 @@ function SplashScreen({ onPrimary, onLogin }) {
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
           <div className="kk-badge kk-badge-pink" style={{ alignSelf: 'flex-start', marginBottom: 18 }}>
-            Ранний доступ · 25 000 мест
+            Ранний доступ · 500 мест
           </div>
           <h1 style={{
             fontSize: 34, lineHeight: 1.08, fontWeight: 700, margin: 0,

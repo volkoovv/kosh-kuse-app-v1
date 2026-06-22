@@ -5,7 +5,7 @@ const { useState: useStateH, useEffect: useEffectH } = React;
 const STORIES = [
 { id: 'meet', title: 'Знакомство\nс&nbsp;Кусь', emoji: '👋', bg: '#FDD4E1' },
 { id: 'food', title: 'Что мы\nварим', emoji: '🍗', bg: '#FFE7B5' },
-{ id: 'beta', title: 'Бета\n25 000', emoji: '🎟️', bg: '#E0F5E5' },
+{ id: 'beta', title: 'Бета\n500', emoji: '🎟️', bg: '#E0F5E5' },
 { id: 'vet', title: 'Скоро\nветеринар', emoji: '🩺', bg: '#E7F0FF' },
 { id: 'norms', title: 'Нормы\nметисов', emoji: '📐', bg: '#F0E6FF' },
 { id: 'water', title: '5 фактов\nо&nbsp;воде', emoji: '💧', bg: '#D8F2F5' }];
@@ -199,7 +199,7 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
               <IconSparkle size={18} color="#fff" />
             </div>
             <div style={{ marginTop: 'auto' }}>
-              <div className="kk-tile-title">Бета — 2000</div>
+              <div className="kk-tile-title">Бета — 500</div>
               <div className="kk-tile-sub">Вы вошли в&nbsp;ранний доступ</div>
             </div>
           </button>
@@ -241,7 +241,7 @@ function StoryViewer({ startId, onClose, markSeen, onChatWith, openTile }) {
   const content = {
     meet: { eyebrow: 'Знакомство', title: 'Я — Кусь', body: 'AI-ассистент Kosh Kuse. Помогаю с&nbsp;питанием, поведением и&nbsp;здоровьем кошек. Спрашивайте что угодно.' },
     food: { eyebrow: 'Корм', title: 'Реальный холистик', body: 'Из ресторанных продуктов. Эксклюзивный премикс собирает полный профиль микроэлементов. Подача — раз в&nbsp;неделю.' },
-    beta: { eyebrow: 'Бета', title: 'Только&nbsp;25 000', body: 'Ранний доступ ограничен. Вы внутри — спасибо. Используйте чат с&nbsp;Кусь, чтобы прокачать паспорт.' },
+    beta: { eyebrow: 'Бета', title: 'Только&nbsp;500', body: 'Ранний доступ ограничен. Вы внутри — спасибо. Используйте чат с&nbsp;Кусь, чтобы прокачать паспорт.' },
     vet: { eyebrow: 'Скоро', title: 'Свой ветеринар', body: 'Закреплённый специалист, доступный 24/7 — в&nbsp;следующем релизе. Сейчас можно позвать «кожаного» из&nbsp;чата.' },
     norms: { eyebrow: 'Нормы', title: 'Метис, 3 года', body: 'Идеальный диапазон веса — 3,8–4,8&nbsp;кг. 4,2&nbsp;кг у&nbsp;Луны — в&nbsp;центре нормы. Хорошие данные.' },
     water: { eyebrow: 'Гид', title: '5 фактов о&nbsp;воде', body: 'Кошки пьют мало по&nbsp;своей природе. Несколько мисок в&nbsp;разных местах увеличивают потребление в&nbsp;1,4 раза.' }
