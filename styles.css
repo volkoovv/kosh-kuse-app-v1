@@ -628,8 +628,25 @@ input, textarea { font-family: inherit; }
   width: 1em; height: 1em;
 }
 
-/* ───────── iPhone full-bleed override (deploy-preview) ───────── */
+/* ───────── iPhone full-bleed override (deploy-preview) ─────────
+   Lock the page to the viewport so the app frame can't drift / rubber-band.
+   Scrolling happens only inside .kk-scroll, never on the page itself. */
 @media (max-width: 480px) {
-  html, body { background: #fff; }
-  #root { padding: 0; align-items: stretch; min-height: 100dvh; }
+  html, body {
+    background: #fff;
+    overflow: hidden;            /* no page-level scroll */
+    overscroll-behavior: none;   /* no pull-to-refresh / rubber-band */
+  }
+  body {
+    position: fixed;             /* pin body to the viewport */
+    inset: 0;
+  }
+  #root {
+    position: absolute;          /* exactly fill the pinned body */
+    inset: 0;
+    padding: 0;
+    min-height: 0;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
 }

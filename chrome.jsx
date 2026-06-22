@@ -97,9 +97,12 @@ function KKDeviceStage({ children }) {
     && window.matchMedia && window.matchMedia('(max-width: 480px)').matches;
 
   if (isPhone) {
+    // Full-bleed: fill the locked viewport box (#root). Height is driven by
+    // the fixed #root in styles.css, not 100dvh — avoids the dvh/address-bar
+    // mismatch that let the whole frame drift on scroll.
     return (
       <div style={{
-        width: '100%', height: '100dvh', minHeight: '100dvh',
+        width: '100%', height: '100%',
         background: '#FFF', position: 'relative', overflow: 'hidden',
         fontFamily: 'var(--kk-font)',
       }}>
