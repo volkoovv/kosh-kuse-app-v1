@@ -135,13 +135,19 @@ function DailyTask({ icon, iconBg, title, sub, reward, done, onToggle, ctaLabel,
   );
 }
 
-function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith, onOpenStatus, onOpenStory }) {
+function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith, onOpenStatus, onOpenStory, planTasks = [] }) {
   const set = (k) => {
     const was = todayDone[k];
     setTodayDone({ ...todayDone, [k]: !was });
     showToast && showToast(was ? 'Возвращено в&nbsp;список' : 'Отлично, Кусь записал! 🐾');
   };
-  const doneCount = ['water', 'food'].filter(k => todayDone[k]).length + (todayDone.play ? 1 : 0);
+  const planIcon = (kind) => kind === 'warmup'
+    ? <IconActivity size={15} color="#000"/>
+    : <IconPlay size={14} color="#000"/>;
+  const allKeys = ['water', 'food', 'play', ...planTasks.map(t => t.id)];
+  const doneCount = allKeys.filter(k => todayDone[k]).length;
+  const totalCount = allKeys.length;
+  const totalReward = 35 + planTasks.reduce((s, t) => s + (Number(t.reward) || 0), 0);
   return (
     <div style={{ marginBottom: 6 }}>
       {/* hero status band */}
@@ -172,13 +178,26 @@ function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith,
 
       {/* today */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 4px 10px' }}>
-        <div className="kk-section-label">СЕГОДНЯ · +35&nbsp;🐾</div>
-        <span style={{ fontSize: 11, color: 'var(--kk-ink-3)' }}>{doneCount} / 3</span>
+        <div className="kk-section-label" dangerouslySetInnerHTML={{ __html: `СЕГОДНЯ · +${totalReward}&nbsp;🐾` }}/>
+        <span style={{ fontSize: 11, color: 'var(--kk-ink-3)' }}>{doneCount} / {totalCount}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <DailyTask reward="10" done={!!todayDone.water} onToggle={() => set('water')} title="Поменять воду" sub="До&nbsp;15:00 · Кусь напомнит" icon={<IconDrop size={16} color="var(--kk-blue-ink)"/>} iconBg="var(--kk-blue-bg)"/>
         <DailyTask reward="10" done={!!todayDone.food} onToggle={() => set('food')} title="Отметить приём корма" sub="2&nbsp;раза в&nbsp;день" icon={<IconGift size={15} color="#000"/>}/>
         <DailyTask reward="15" done={!!todayDone.play} onToggle={() => set('play')} accent title="15&nbsp;минут активной игры" sub="Лучше после&nbsp;19:00" icon={<IconPlay size={14} color="#000"/>} iconBg="var(--kk-pink)" ctaLabel="Идеи" onCta={() => onChatWith && onChatWith('Подскажи идеи для 15 минут активной игры с кошкой дома')}/>
+        {planTasks.map(t => (
+          <DailyTask
+            key={t.id}
+            reward={String(t.reward)}
+            done={!!todayDone[t.id]}
+            onToggle={() => set(t.id)}
+            accent
+            title={t.title}
+            sub={t.sub}
+            icon={planIcon(t.kind)}
+            iconBg="var(--kk-pink)"
+          />
+        ))}
       </div>
     </div>
   );

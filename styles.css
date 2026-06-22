@@ -56,6 +56,11 @@ html, body {
   color: var(--kk-ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* App-like feel: no double-tap zoom, no text-size auto-bump, no tap flash */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {

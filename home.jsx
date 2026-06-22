@@ -11,7 +11,7 @@ const STORIES = [
 { id: 'water', title: '5 фактов\nо&nbsp;воде', emoji: '💧', bg: '#D8F2F5' }];
 
 
-function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, proactiveSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName }) {
+function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, proactiveSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName, planTasks }) {
   const greetName = userName && userName.trim() || 'друг';
   return (
     <div className="kk-screen">
@@ -70,7 +70,7 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
                 По данным паспорта — средняя активность. Для метиса 3 лет норма выше. Давайте подберём 15 минут игры в&nbsp;день?
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button className="kk-btn kk-btn-primary kk-btn-sm" onClick={onChat}>Составить план</button>
+                <button className="kk-btn kk-btn-primary kk-btn-sm" onClick={() => onChatWith('__plan_activity__')}>Составить план</button>
                 <button className="kk-btn kk-btn-secondary kk-btn-sm" onClick={() => dismissProactive('activityCard')}>Позже</button>
               </div>
             </div>
@@ -89,6 +89,7 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
           onChatWith={onChatWith}
           onOpenStatus={onOpenStatus}
           onOpenStory={onOpenStory}
+          planTasks={planTasks}
         />
 
         {/* Pet quick card */}

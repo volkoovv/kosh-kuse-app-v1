@@ -18,29 +18,93 @@ const SEED_MESSAGES = [
     quick: ['Всё ок, забыл отметить', 'Стала вялой', 'Не вижу разницы'] },
 ];
 
-function ChatScreen({ onTab, onBack, seed, clearSeed }) {
+/* ─── Guided "plan builder" flow (triggered from Home "Составить план") ─── */
+const PLAN_SENTINEL = '__plan_activity__';
+const PLAN_INTRO = 'Составь, пожалуйста, план активности для Луны';
+const PLAN_STEPS = [
+  {
+    key: 'duration',
+    q: 'Отлично, давайте соберём план активности для&nbsp;Луны 🐾<br/>Сколько времени в&nbsp;день готовы уделять играм?',
+    options: [
+      { label: '10 минут', value: '10 минут' },
+      { label: '15 минут', value: '15 минут' },
+      { label: '30 минут', value: '30 минут' },
+    ],
+  },
+  {
+    key: 'time',
+    q: 'Когда удобнее играть с&nbsp;Луной?',
+    options: [
+      { label: 'Утром', value: 'утром' },
+      { label: 'Вечером после&nbsp;19:00', value: 'вечером' },
+      { label: 'В течение дня', value: 'в течение дня' },
+    ],
+  },
+  {
+    key: 'toy',
+    q: 'Что Луне нравится больше всего? Можно выбрать или&nbsp;написать своё.',
+    options: [
+      { label: 'Удочка-дразнилка', value: 'удочка' },
+      { label: 'Мячики и&nbsp;мышки', value: 'мячики' },
+      { label: 'Лазерная указка', value: 'лазер' },
+      { label: 'Пока не знаю', value: 'не знаю' },
+    ],
+  },
+];
+
+/* Build the final plan + the tasks to drop into «Сегодня» */
+function buildActivityPlan(a) {
+  const toyMap = { 'удочка': 'удочка-дразнилка', 'мячики': 'мячики и&nbsp;мышки', 'лазер': 'лазерная указка', 'не знаю': 'разные игрушки' };
+  const timeMap = { 'утром': 'утром', 'вечером': 'вечером после&nbsp;19:00', 'в течение дня': 'в&nbsp;течение дня' };
+  const toy = toyMap[a.toy] || a.toy || 'разные игрушки';
+  const time = timeMap[a.time] || a.time || 'вечером';
+  const dur = a.duration || '15 минут';
+  return {
+    summaryHtml: `Готово! Собрал план активности для&nbsp;Луны 🐾<br/><br/>• <b>${dur}</b> активной игры — ${time}<br/>• Игрушка: <b>${toy}</b><br/>• Лёгкая разминка 5&nbsp;минут утром<br/><br/>Добавил пункты в&nbsp;«Сегодня» на&nbsp;главном экране. Отмечайте выполненное — будут лапки.`,
+    tasks: [
+      { id: 'plan-play', title: `${dur} игры · ${toy}`, sub: `${time} · план Кусь`, reward: 15, kind: 'play' },
+      { id: 'plan-warmup', title: 'Разминка 5&nbsp;минут', sub: 'утром · план Кусь', reward: 5, kind: 'warmup' },
+    ],
+  };
+}
+
+function ChatScreen({ onTab, onBack, seed, clearSeed, onPlanReady }) {
   const [messages, setMessages] = useStateC(SEED_MESSAGES);
   const [draft, setDraft] = useStateC('');
   const [typing, setTyping] = useStateC(false);
   const [mode, setMode] = useStateC('ai'); // ai | human
   const [showHumanModal, setShowHumanModal] = useStateC(false);
+  const [wizard, setWizard] = useStateC(null); // null | { step, answers } — guided plan flow
+  const wizardRef = useRefC(null);             // authoritative current step (avoids stale-closure answers)
+  const setWiz = (next) => { wizardRef.current = next; setWizard(next); };
   const scrollRef = useRefC(null);
 
   useEffectC(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, typing]);
 
-  // when a seed prefill arrives (e.g. from "Идеи", "Уточнить"), drop it into composer
+  // when a seed prefill arrives: a sentinel starts the guided plan flow,
+  // anything else is dropped into the composer (e.g. from "Идеи", "Уточнить").
   useEffectC(() => {
-    if (seed) {
+    if (!seed) return;
+    if (seed === PLAN_SENTINEL) {
+      startPlan();
+    } else {
       setDraft(seed);
-      clearSeed && clearSeed();
     }
+    clearSeed && clearSeed();
   }, [seed]);
 
   function send(textOverride) {
     const text = (textOverride !== undefined ? textOverride : draft).trim();
     if (!text) return;
+    // While the plan wizard is active, a typed message is an answer to the
+    // current step (free-text), not a normal question to the assistant.
+    if (wizardRef.current) {
+      setDraft('');
+      answerPlan(wizardRef.current.step, text, text);
+      return;
+    }
     const id = Date.now();
     setMessages(m => [...m, { id, from: 'user', text, day: 'today' }]);
     setDraft('');
@@ -49,6 +113,47 @@ function ChatScreen({ onTab, onBack, seed, clearSeed }) {
       setTyping(false);
       setMessages(m => [...m, generateReply(text, id + 1)]);
     }, 1200 + Math.random() * 600);
+  }
+
+  /* ─── guided plan flow ─── */
+  function startPlan() {
+    setMessages(m => [...m, { id: Date.now(), from: 'user', day: 'today', text: PLAN_INTRO }]);
+    setWiz({ step: 0, answers: {} });
+    askPlanStep(0);
+  }
+  function askPlanStep(stepIndex) {
+    const step = PLAN_STEPS[stepIndex];
+    setTyping(true);
+    setTimeout(() => {
+      setTyping(false);
+      setMessages(m => [...m, {
+        id: Date.now(), from: 'ai', day: 'today',
+        kind: 'wizard', text: step.q, options: step.options, stepIndex,
+      }]);
+    }, 650);
+  }
+  function answerPlan(stepIndex, value, label) {
+    const w = wizardRef.current;
+    if (!w || w.step !== stepIndex) return; // ignore taps on already-answered questions
+    setMessages(m => [...m, { id: Date.now(), from: 'user', day: 'today', text: label || value }]);
+    const answers = { ...w.answers, [PLAN_STEPS[stepIndex].key]: value };
+    const next = stepIndex + 1;
+    if (next < PLAN_STEPS.length) {
+      setWiz({ step: next, answers });
+      askPlanStep(next);
+    } else {
+      setWiz(null);
+      finishPlan(answers);
+    }
+  }
+  function finishPlan(answers) {
+    const plan = buildActivityPlan(answers);
+    setTyping(true);
+    setTimeout(() => {
+      setTyping(false);
+      setMessages(m => [...m, { id: Date.now(), from: 'ai', day: 'today', kind: 'planDone', text: plan.summaryHtml }]);
+      onPlanReady && onPlanReady(plan.tasks);
+    }, 900);
   }
 
   function generateReply(input, id) {
@@ -209,6 +314,25 @@ function ChatScreen({ onTab, onBack, seed, clearSeed }) {
                       ))}
                     </div>
                   )}
+                  {m.kind === 'wizard' && m.options && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                      {m.options.map(opt => (
+                        <button
+                          key={opt.value}
+                          className="kk-chip kk-chip-outline"
+                          onClick={() => answerPlan(m.stepIndex, opt.value, opt.label)}
+                          dangerouslySetInnerHTML={{__html: opt.label}}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {m.kind === 'planDone' && (
+                    <button
+                      className="kk-btn kk-btn-primary kk-btn-sm"
+                      style={{ marginTop: 8 }}
+                      onClick={() => onTab('home')}
+                    >Открыть «Сегодня»</button>
+                  )}
                 </div>
               )}
             </React.Fragment>
@@ -242,7 +366,7 @@ function ChatScreen({ onTab, onBack, seed, clearSeed }) {
         <input
           className="kk-input"
           style={{ background: 'var(--kk-bg-soft)' }}
-          placeholder={mode === 'ai' ? 'Напишите вопрос…' : 'Сообщение Игорю…'}
+          placeholder={wizard ? 'Выберите вариант или напишите свой…' : mode === 'ai' ? 'Напишите вопрос…' : 'Сообщение Игорю…'}
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}

@@ -67,6 +67,7 @@ function App() {
   const [toast, setToast] = useStateA(null);        // brief toast message
   const [chatSeed, setChatSeed] = useStateA(null);  // when set, opens chat with prefilled message
   const [todayDone, setTodayDone] = useStateA({});
+  const [planTasks, setPlanTasks] = useStateA([]);   // tasks produced by the "Составить план" flow → shown in «Сегодня»
   const [articleId, setArticleId] = useStateA(null);   // when set, KB shows article view
   const [settingsPage, setSettingsPage] = useStateA(null);   // null | 'faq' | …
   const [petPage, setPetPage] = useStateA(null);   // null | 'status' | 'brelok'
@@ -74,6 +75,13 @@ function App() {
 
   function openSheet(cfg) { setSheetState(cfg); }
   function closeSheet() { setSheetState(null); }
+  // Append plan tasks to «Сегодня», de-duped by id (re-running the flow won't double them).
+  function addPlanTasks(tasks) {
+    setPlanTasks(prev => {
+      const ids = new Set(prev.map(t => t.id));
+      return [...prev, ...(tasks || []).filter(t => !ids.has(t.id))];
+    });
+  }
   function showToast(msg) { setToast(msg); }
   function openChatWith(prefill) {
     setChatSeed(prefill || null);
@@ -258,6 +266,7 @@ function App() {
           showToast={showToast}
           todayDone={todayDone}
           setTodayDone={setTodayDone}
+          planTasks={planTasks}
           proactiveSeen={t.showProactive ? proactiveSeen : { activityCard: true }}
           dismissProactive={dismissProactive}
         />
@@ -269,6 +278,7 @@ function App() {
           onBack={() => setTab('home')}
           seed={chatSeed}
           clearSeed={() => setChatSeed(null)}
+          onPlanReady={addPlanTasks}
         />
       );
     } else if (tab === 'kb') {
