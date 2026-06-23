@@ -2,6 +2,8 @@
 // обработки, осмотры, взвешивание). Time-based, отдельно от ежедневного «экшена».
 // Loaded before app.jsx; reuses tokens/icons/chrome.
 
+const { useState: useStateHealth } = React;
+
 /* Seed care plan for the demo pet (Луна, метис, 3 года, прививки «частично», квартира).
    dueInDays — срок до следующего ухода относительно «сегодня» (минус = просрочено).
    everyDays — периодичность; на ней пересчитывается следующий срок после «Отметить». */
@@ -19,7 +21,46 @@ function careStatusOf(dueInDays) {
   return 'ok';
 }
 
-function HealthScreen({ pet, careItems = [], onMark, onBack, onTab, onChat, onHelp, openSheet }) {
+/* Seed weight history (kg over the last ~5 months, trending to current). */
+const WEIGHT_SEED = [
+  { kg: 3.8,  daysAgo: 150 },
+  { kg: 3.9,  daysAgo: 120 },
+  { kg: 4.0,  daysAgo: 90 },
+  { kg: 4.1,  daysAgo: 60 },
+  { kg: 4.15, daysAgo: 30 },
+  { kg: 4.2,  daysAgo: 0 },
+];
+
+/* Minimal inline weight sparkline. */
+function WeightChart({ data }) {
+  const pts = (data || []).slice(-8);
+  if (pts.length < 2) return null;
+  const W = 280, H = 70, pad = 10;
+  const xs = pts.map(p => p.kg);
+  const lo = Math.min(...xs) - 0.2, hi = Math.max(...xs) + 0.2;
+  const x = (i) => pad + (i * (W - 2 * pad)) / (pts.length - 1);
+  const y = (kg) => pad + (1 - (kg - lo) / (hi - lo || 1)) * (H - 2 * pad);
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p.kg).toFixed(1)}`).join(' ');
+  const area = `${line} L${x(pts.length - 1).toFixed(1)} ${H - pad} L${x(0).toFixed(1)} ${H - pad} Z`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+      <path d={area} fill="rgba(253,212,225,0.4)"/>
+      <path d={line} fill="none" stroke="var(--kk-ink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {pts.map((p, i) => (
+        <circle key={i} cx={x(i)} cy={y(p.kg)} r={i === pts.length - 1 ? 3.5 : 2}
+          fill={i === pts.length - 1 ? 'var(--kk-pink-deep)' : 'var(--kk-ink)'}/>
+      ))}
+    </svg>
+  );
+}
+
+function HealthScreen({ pet, careItems = [], onMark, onBack, onTab, onChat, onHelp, openSheet, weightLog = [], onLogWeight, careLog = [] }) {
+  const [weighDraft, setWeighDraft] = useStateHealth('');
+  const lastKg = weightLog.length ? weightLog[weightLog.length - 1].kg : ((pet && pet.weight) || '—');
+  const prevKg = weightLog.length > 1 ? weightLog[weightLog.length - 2].kg : null;
+  const delta = prevKg != null ? +(lastKg - prevKg).toFixed(2) : null;
+  const deltaLabel = delta == null ? '' : delta === 0 ? '· без изменений' : `· ${delta > 0 ? '+' : ''}${delta} кг`;
+  const deltaColor = (delta == null || delta === 0) ? 'var(--kk-ink-3)' : 'var(--kk-success-ink)';
   // Vaccination card reflects the passport status (kept in sync with PetScreen).
   const noteFor = (it) => {
     if (it.id === 'vacc' && pet) {
@@ -78,6 +119,32 @@ function HealthScreen({ pet, careItems = [], onMark, onBack, onTab, onChat, onHe
           </div>
         </div>
 
+        {/* Вес — динамика */}
+        <div className="kk-card" style={{ marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div className="kk-section-label">ВЕС · ДИНАМИКА</div>
+            <div style={{ fontSize: 13, color: 'var(--kk-ink-3)' }}>
+              <b style={{ fontSize: 16, color: 'var(--kk-ink)' }}>{lastKg}</b> кг <span style={{ color: deltaColor }}>{deltaLabel}</span>
+            </div>
+          </div>
+          <WeightChart data={weightLog}/>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <input
+              className="kk-input"
+              inputMode="decimal"
+              placeholder="новый замер, напр. 4.3"
+              value={weighDraft}
+              onChange={e => setWeighDraft(e.target.value)}
+              style={{ flex: 1, height: 44 }}
+            />
+            <button
+              className="kk-btn kk-btn-primary"
+              style={{ width: 'auto', padding: '0 18px', height: 44 }}
+              onClick={() => { onLogWeight && onLogWeight(weighDraft); setWeighDraft(''); }}
+            >Записать</button>
+          </div>
+        </div>
+
         {/* Care items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {sorted.map(it => {
@@ -102,6 +169,28 @@ function HealthScreen({ pet, careItems = [], onMark, onBack, onTab, onChat, onHe
               </div>
             );
           })}
+        </div>
+
+        {/* История ухода */}
+        <div style={{ marginTop: 22 }}>
+          <div className="kk-section-label" style={{ marginBottom: 10 }}>ИСТОРИЯ</div>
+          {(!careLog || careLog.length === 0) ? (
+            <div style={{ fontSize: 12, color: 'var(--kk-ink-4)', lineHeight: 1.5, padding: '2px 2px 4px' }}>
+              Пока пусто — отмечайте уход и&nbsp;взвешивания, события появятся здесь лентой.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {careLog.slice(0, 12).map(ev => (
+                <div key={ev.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--kk-line)' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 14, background: 'var(--kk-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <IconCheck size={14} color="var(--kk-success-ink)"/>
+                  </div>
+                  <div style={{ flex: 1, fontSize: 13, color: 'var(--kk-ink)' }} dangerouslySetInnerHTML={{ __html: ev.label }}/>
+                  <div style={{ fontSize: 11, color: 'var(--kk-ink-4)' }}>{ev.daysAgo === 0 ? 'сегодня' : `${ev.daysAgo} дн. назад`}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Ask Кусь */}
@@ -129,4 +218,4 @@ function HealthScreen({ pet, careItems = [], onMark, onBack, onTab, onChat, onHe
   );
 }
 
-Object.assign(window, { HealthScreen, CARE_SEED, careStatusOf });
+Object.assign(window, { HealthScreen, CARE_SEED, careStatusOf, WEIGHT_SEED, WeightChart });

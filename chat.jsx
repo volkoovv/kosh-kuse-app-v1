@@ -68,6 +68,9 @@ function buildActivityPlan(a) {
   };
 }
 
+/* Red-flag symptoms → urgent triage (assistant must not "reassure" these away). */
+const RED_FLAG = /(кровотеч|кровит|кровь из|идёт кровь|не ест.*(2|два|3|три|четыре|сутки|дня|дней)|(2|два|3|три|четыре)\s*(дня|дней|суток).*не ест|хрома|судорог|задыха|не дыша|тяжело дыш|отрав|проглотил|съел.*(нитк|таблетк|яд|кост)|упал с|с высоты|обморок|потерял созн|не встаёт|паралич|перестал.*(ходить|двигать)|рвот.*(постоянн|весь день|кров)|температура (40|41|39))/i;
+
 function ChatScreen({ onTab, onBack, seed, clearSeed, onPlanReady }) {
   const [messages, setMessages] = useStateC(SEED_MESSAGES);
   const [draft, setDraft] = useStateC('');
@@ -158,6 +161,12 @@ function ChatScreen({ onTab, onBack, seed, clearSeed, onPlanReady }) {
 
   function generateReply(input, id) {
     const t = input.toLowerCase();
+    if (RED_FLAG.test(t)) {
+      return {
+        id, from: 'ai', day: 'today', kind: 'urgent',
+        text: 'Похоже на&nbsp;ситуацию, где лучше не&nbsp;ждать. Я&nbsp;не&nbsp;заменяю врача&nbsp;— при&nbsp;таких признаках стоит как можно скорее показать питомца специалисту.',
+      };
+    }
     if (/анализ|кров|узи|клиник/.test(t)) {
       return {
         id, from: 'ai', day: 'today',
@@ -276,7 +285,22 @@ function ChatScreen({ onTab, onBack, seed, clearSeed, onPlanReady }) {
                   {m.day === 'yesterday' ? 'Вчера' : 'Сегодня'}
                 </div>
               )}
-              {m.kind === 'proactive' ? (
+              {m.kind === 'urgent' ? (
+                <div style={{ alignSelf: 'flex-start', maxWidth: '92%' }}>
+                  <div style={{ background: 'var(--kk-error-bg)', border: '1px solid var(--kk-error-ink)', borderRadius: 16, padding: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 16 }}>⚠️</span>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--kk-error-ink)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Возможно, срочно</div>
+                    </div>
+                    <div style={{ fontSize: 13.5, color: 'var(--kk-ink)', lineHeight: 1.45 }} dangerouslySetInnerHTML={{__html: m.text}}/>
+                    <button
+                      className="kk-btn kk-btn-sm"
+                      style={{ background: 'var(--kk-error-ink)', color: '#fff', marginTop: 12, width: '100%' }}
+                      onClick={() => setShowHumanModal(true)}
+                    >Срочно связаться со&nbsp;специалистом</button>
+                  </div>
+                </div>
+              ) : m.kind === 'proactive' ? (
                 <div style={{ alignSelf: 'flex-start', maxWidth: '88%' }}>
                   <div style={{
                     background: '#FFF', border: '1px solid var(--kk-line)',

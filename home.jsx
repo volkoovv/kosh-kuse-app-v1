@@ -11,7 +11,7 @@ const STORIES = [
 { id: 'water', title: '5 фактов\nо&nbsp;воде', emoji: '💧', bg: '#D8F2F5' }];
 
 
-function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, onHealth, proactiveSeen, storiesSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName, planTasks }) {
+function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, onHealth, onFood, onReferral, invited, proactiveSeen, storiesSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName, planTasks }) {
   const greetName = userName && userName.trim() || 'друг';
   return (
     <div className="kk-screen">
@@ -132,7 +132,7 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
               { icon: <IconShield size={16} />, title: 'Здоровье', sub: 'Прививки, глистогонка, осмотры', onClick: () => onHealth && onHealth() },
               { icon: <IconBook size={16} />, title: 'База знаний', sub: '76 статей · породы, нормы', onClick: () => onTile('faq') },
               { icon: <IconHeart size={16} />, title: 'Ветеринар · скоро', sub: 'Появится в&nbsp;июле', onClick: () => onTile('soon-vet') },
-              { icon: <IconGift size={16} />, title: 'Подписка на&nbsp;корм · скоро', sub: 'Появится в&nbsp;июле', onClick: () => onTile('soon-shop') }],
+              { icon: <IconGift size={16} />, title: 'Подписка на&nbsp;корм · скоро', sub: 'Рассчитать порцию · бронь', onClick: () => onFood && onFood() }],
 
               secondaryLabel: 'Закрыть'
             })}>
@@ -194,14 +194,14 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
             </div>
           </button>
 
-          <button className="kk-tile" onClick={() => onTile('soon-shop')}>
+          <button className="kk-tile" onClick={onFood}>
             <span className="kk-tile-soon">Скоро</span>
             <div className="kk-tile-icon" style={{ background: '#FFF' }}>
               <IconGift size={20} />
             </div>
             <div style={{ marginTop: 'auto' }}>
               <div className="kk-tile-title">Подписка на&nbsp;корм</div>
-              <div className="kk-tile-sub">Старт продаж — в&nbsp;июле</div>
+              <div className="kk-tile-sub">Порция под питомца · бронь</div>
             </div>
           </button>
 
@@ -215,6 +215,18 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
             </div>
           </button>
         </div>
+
+        {/* Referral */}
+        <button onClick={onReferral} style={{ width: '100%', marginTop: 16, background: 'var(--kk-warm-bg)', border: '1px solid var(--kk-warm-edge)', borderRadius: 18, padding: 14, display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <IconGift size={20} color="var(--kk-warm-ink)"/>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--kk-warm-ink)' }}>Приведи друга в&nbsp;бету</div>
+            <div style={{ fontSize: 11.5, color: 'var(--kk-warm-ink)', opacity: 0.8, marginTop: 2 }}>+50&nbsp;🐾 вам обоим · приглашено {invited || 0}/3</div>
+          </div>
+          <IconChevron size={18} color="var(--kk-warm-ink)"/>
+        </button>
 
         {/* Footer hint */}
         <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--kk-ink-4)', margin: '24px 0 6px', lineHeight: 1.5 }}>

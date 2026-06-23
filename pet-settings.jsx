@@ -26,6 +26,11 @@ function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, 
   const careSoon = (careItems || []).filter(i => careStatusOf(i.dueInDays) === 'soon').length;
   const careSummary = careOverdue ? `${careOverdue} просрочено` : careSoon ? `${careSoon} скоро` : 'Всё по графику';
   const careTone = careOverdue ? 'var(--kk-error-ink)' : careSoon ? 'var(--kk-warm-ink)' : 'var(--kk-ink-3)';
+  // Vaccination row — live from the care calendar (next due + status), tappable to Здоровье.
+  const vaccItem = (careItems || []).find(i => i.id === 'vacc');
+  const vaccSt = vaccItem ? careStatusOf(vaccItem.dueInDays) : null;
+  const vaccDue = vaccItem ? (vaccItem.dueInDays === 0 ? 'сегодня' : vaccItem.dueInDays < 0 ? `просрочено на ${-vaccItem.dueInDays} дн.` : `через ${vaccItem.dueInDays} дн.`) : null;
+  const vaccDueTone = vaccSt === 'overdue' ? 'var(--kk-error-ink)' : 'var(--kk-ink-3)';
 
   return (
     <div className="kk-screen">
@@ -102,7 +107,24 @@ function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, 
             <span style={{ fontSize: 13, fontWeight: 500, color: careTone }}>{careSummary}</span>
             <IconChevron size={16} color="var(--kk-ink-4)"/>
           </button>
-          <PetRow label="Прививки" value={vacLabel} status={pet.vaccinations === 'partial' ? 'partial' : null}/>
+          <button
+            onClick={onHealth}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 0', borderBottom: '1px solid var(--kk-line)', borderTop: 0, borderLeft: 0, borderRight: 0, background: 'none', textAlign: 'left', cursor: 'pointer' }}
+          >
+            <span style={{ flex: 1, color: 'var(--kk-ink-3)', fontSize: 13 }}>Прививки</span>
+            {vaccSt === 'overdue'
+              ? <span className="kk-badge kk-badge-error">Просрочено</span>
+              : vaccSt === 'soon'
+              ? <span className="kk-badge kk-badge-warm">Скоро</span>
+              : pet.vaccinations === 'partial'
+              ? <span className="kk-badge kk-badge-warm">Уточнить</span>
+              : null}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--kk-ink)' }}>{vacLabel}</div>
+              {vaccDue && <div style={{ fontSize: 11, color: vaccDueTone, marginTop: 1 }}>{vaccDue}</div>}
+            </div>
+            <IconChevron size={16} color="var(--kk-ink-4)"/>
+          </button>
           <PetRow label="Переживания" value={pet.concerns || '—'} multi onEdit={() => startEdit('concerns', pet.concerns)}/>
         </PetSection>
 

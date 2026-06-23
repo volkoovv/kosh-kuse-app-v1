@@ -69,6 +69,11 @@ function App() {
   const [todayDone, setTodayDone] = useStateA({});
   const [planTasks, setPlanTasks] = useStateA([]);   // tasks produced by the "Составить план" flow → shown in «Сегодня»
   const [careItems, setCareItems] = useStateA(CARE_SEED);   // health care calendar (Здоровье)
+  const [weightLog, setWeightLog] = useStateA(WEIGHT_SEED); // weight history (Здоровье)
+  const [careLog, setCareLog] = useStateA([]);              // health timeline events
+  const [waitlist, setWaitlist] = useStateA(false);         // food pre-sell waitlist
+  const [invited, setInvited] = useStateA(0);               // referral count
+  const [showFood, setShowFood] = useStateA(false);         // food teaser overlay
   const [articleId, setArticleId] = useStateA(null);   // when set, KB shows article view
   const [settingsPage, setSettingsPage] = useStateA(null);   // null | 'faq' | …
   const [petPage, setPetPage] = useStateA(null);   // null | 'status' | 'brelok'
@@ -86,9 +91,36 @@ function App() {
   // Mark a care item done → its next due date is pushed out by its period.
   // Vaccination also syncs back to the passport status (partial → full).
   function markCareDone(id) {
+    const item = careItems.find(i => i.id === id);
     setCareItems(items => items.map(it => it.id === id ? { ...it, dueInDays: it.everyDays } : it));
     if (id === 'vacc') setPet(p => ({ ...p, vaccinations: 'full' }));
+    if (item) setCareLog(l => [{ id: Date.now(), kind: id, label: 'Отметка: ' + item.label, daysAgo: 0 }, ...l]);
     showToast('Отметил ✓ Напомню к&nbsp;следующему разу 🐾');
+  }
+  // Log a new weight measurement → graph, timeline, passport weight, weigh-in reset.
+  function logWeight(kg) {
+    const v = parseFloat(String(kg).replace(',', '.'));
+    if (!v || v < 1 || v > 20) { showToast('Введите вес, напр. 4.3'); return; }
+    const r = Math.round(v * 100) / 100;
+    setWeightLog(w => [...w, { kg: r, daysAgo: 0 }]);
+    setPet(p => ({ ...p, weight: String(r) }));
+    setCareItems(items => items.map(it => it.id === 'weigh' ? { ...it, dueInDays: it.everyDays } : it));
+    setCareLog(l => [{ id: Date.now(), kind: 'weigh', label: 'Взвешивание · ' + r + ' кг', daysAgo: 0 }, ...l]);
+    showToast('Записал вес ✓');
+  }
+  // Referral share sheet (demo: each share simulates one invite).
+  function openReferral() {
+    openSheet({
+      icon: <IconGift size={24} color="#000"/>, iconBg: 'var(--kk-pink)',
+      title: 'Пригласите друга',
+      body: `Поделитесь Kosh Kuse — за&nbsp;каждого друга, который войдёт в&nbsp;бету, вы&nbsp;оба получаете <b>+50&nbsp;🐾</b> и&nbsp;место в&nbsp;раннем доступе. Приглашено: <b>${invited}/3</b>.`,
+      items: [
+        { icon: <IconArrow size={16}/>, title: 'Скопировать ссылку', sub: 'koshkuse.app/i/LUNA-500', onClick: () => showToast('Ссылка скопирована 🐾') },
+      ],
+      primaryLabel: 'Поделиться приглашением',
+      onPrimary: () => { setInvited(n => Math.min(3, n + 1)); showToast('Отправили приглашение — +50&nbsp;🐾 при&nbsp;входе друга'); },
+      secondaryLabel: 'Закрыть',
+    });
   }
   function goHealth() { setStage('main'); setTab('pet'); setPetPage('health'); }
   function showToast(msg) { setToast(msg); }
@@ -277,6 +309,9 @@ function App() {
           setTodayDone={setTodayDone}
           planTasks={planTasks}
           onHealth={goHealth}
+          onFood={() => setShowFood(true)}
+          onReferral={openReferral}
+          invited={invited}
           storiesSeen={seen}
           proactiveSeen={t.showProactive ? proactiveSeen : { activityCard: true }}
           dismissProactive={dismissProactive}
@@ -342,6 +377,9 @@ function App() {
             pet={pet}
             careItems={careItems}
             onMark={markCareDone}
+            weightLog={weightLog}
+            onLogWeight={logWeight}
+            careLog={careLog}
             onBack={() => setPetPage(null)}
             onTab={(id) => { setPetPage(null); setTab(id); }}
             onChat={(q) => openChatWith(q)}
@@ -457,6 +495,14 @@ function App() {
             onClose={() => setFoundOpen(false)}
           />
         )}
+        {showFood && (
+          <FoodScreen
+            pet={pet}
+            joined={waitlist}
+            onJoin={() => { setWaitlist(true); showToast('Вы в&nbsp;списке беты — цену зафиксируем на&nbsp;старте 🐾'); }}
+            onClose={() => setShowFood(false)}
+          />
+        )}
       </KKDeviceStage>
 
       <TweaksPanel title="Tweaks">
@@ -551,7 +597,7 @@ function App() {
           />
           <TweakButton
             label="Начать сначала"
-            onClick={() => { setStage('splash'); setTab('home'); setPetPage(null); setPet(DEFAULT_PET); setPlanTasks([]); setCareItems(CARE_SEED); setTodayDone({}); }}
+            onClick={() => { setStage('splash'); setTab('home'); setPetPage(null); setPet(DEFAULT_PET); setPlanTasks([]); setCareItems(CARE_SEED); setTodayDone({}); setWeightLog(WEIGHT_SEED); setCareLog([]); setWaitlist(false); setInvited(0); setShowFood(false); }}
           />
           <TweakButton
             label="Сбросить уведомления и сторис"
