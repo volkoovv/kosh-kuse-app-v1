@@ -308,6 +308,8 @@ function App() {
           todayDone={todayDone}
           setTodayDone={setTodayDone}
           planTasks={planTasks}
+          careItems={careItems}
+          onMarkCare={markCareDone}
           onHealth={goHealth}
           onFood={() => setShowFood(true)}
           onReferral={openReferral}

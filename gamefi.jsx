@@ -135,7 +135,7 @@ function DailyTask({ icon, iconBg, title, sub, reward, done, onToggle, ctaLabel,
   );
 }
 
-function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith, onOpenStatus, onOpenStory, planTasks = [] }) {
+function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith, onOpenStatus, onOpenStory, planTasks = [], careItems = [], onMarkCare, onHealth }) {
   const set = (k) => {
     const was = todayDone[k];
     setTodayDone({ ...todayDone, [k]: !was });
@@ -148,6 +148,9 @@ function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith,
   const doneCount = allKeys.filter(k => todayDone[k]).length;
   const totalCount = allKeys.length;
   const totalReward = 35 + planTasks.reduce((s, t) => s + (Number(t.reward) || 0), 0);
+  // «Скоро» — health items due soon, surfaced into «Забота» (the do-surface) on Главная.
+  const careDue = (careItems || []).filter(i => careStatusOf(i.dueInDays) !== 'ok').sort((a, b) => a.dueInDays - b.dueInDays);
+  const dueText = (d) => d === 0 ? 'сегодня' : d < 0 ? `просрочено ${-d} дн.` : `через ${d} дн.`;
   return (
     <div style={{ marginBottom: 6 }}>
       {/* hero status band */}
@@ -176,9 +179,13 @@ function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith,
         <QuestCard title="3&nbsp;статьи о&nbsp;метисах" progress="1 из 3" reward="50" pct="33%" bg="var(--kk-warm-bg)" onClick={() => onOpenStory && onOpenStory('norms')}/>
       </div>
 
-      {/* today */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '20px 4px 10px' }}>
-        <div className="kk-section-label" dangerouslySetInnerHTML={{ __html: `СЕГОДНЯ · +${totalReward}&nbsp;🐾` }}/>
+      {/* ЗАБОТА — единая поверхность действий (Сегодня + Скоро) */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '22px 4px 12px' }}>
+        <div className="kk-section-label">ЗАБОТА</div>
+        <button onClick={onHealth} style={{ background: 'none', border: 0, fontSize: 11, color: 'var(--kk-pink-deep)', fontWeight: 600 }}>Здоровье →</button>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 4px 10px' }}>
+        <div className="kk-section-label" style={{ color: 'var(--kk-ink-2)' }} dangerouslySetInnerHTML={{ __html: `Сегодня · +${totalReward}&nbsp;🐾` }}/>
         <span style={{ fontSize: 11, color: 'var(--kk-ink-3)' }}>{doneCount} / {totalCount}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -199,6 +206,32 @@ function HomeTasksSection({ todayDone = {}, setTodayDone, showToast, onChatWith,
           />
         ))}
       </div>
+
+      {/* Скоро — горящий уход из «Здоровья», прямо в ленте действий */}
+      {careDue.length > 0 && (
+        <>
+          <div className="kk-section-label" style={{ color: 'var(--kk-ink-2)', margin: '18px 4px 10px' }}>Скоро · уход</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {careDue.map(it => {
+              const st = careStatusOf(it.dueInDays);
+              const tone = st === 'overdue' ? 'var(--kk-error-bg)' : 'var(--kk-warm-bg)';
+              const dtone = st === 'overdue' ? 'var(--kk-error-ink)' : 'var(--kk-warm-ink)';
+              return (
+                <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 14, background: 'var(--kk-bg-soft)' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: tone, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{it.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--kk-ink)' }}>{it.label}</div>
+                    <div style={{ fontSize: 11, color: dtone, marginTop: 2 }}>{dueText(it.dueInDays)}</div>
+                  </div>
+                  {it.id === 'weigh'
+                    ? <button className="kk-chip kk-chip-outline" style={{ height: 30, fontSize: 11.5, padding: '0 12px' }} onClick={onHealth}>Взвесить</button>
+                    : <button className="kk-chip kk-chip-outline" style={{ height: 30, fontSize: 11.5, padding: '0 12px' }} onClick={() => onMarkCare && onMarkCare(it.id)}>Отметить</button>}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

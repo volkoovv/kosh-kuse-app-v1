@@ -11,7 +11,7 @@ const STORIES = [
 { id: 'water', title: '5 фактов\nо&nbsp;воде', emoji: '💧', bg: '#D8F2F5' }];
 
 
-function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, onHealth, onFood, onReferral, invited, proactiveSeen, storiesSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName, planTasks }) {
+function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, onHealth, onFood, onReferral, invited, proactiveSeen, storiesSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName, planTasks, careItems, onMarkCare }) {
   const greetName = userName && userName.trim() || 'друг';
   return (
     <div className="kk-screen">
@@ -90,6 +90,9 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
           onOpenStatus={onOpenStatus}
           onOpenStory={onOpenStory}
           planTasks={planTasks}
+          careItems={careItems}
+          onMarkCare={onMarkCare}
+          onHealth={onHealth}
         />
 
         {/* Pet quick card */}
