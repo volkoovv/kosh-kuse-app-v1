@@ -19,7 +19,15 @@ function careStatusOf(dueInDays) {
   return 'ok';
 }
 
-function HealthScreen({ careItems = [], onMark, onBack, onTab, onChat, onHelp, openSheet }) {
+function HealthScreen({ pet, careItems = [], onMark, onBack, onTab, onChat, onHelp, openSheet }) {
+  // Vaccination card reflects the passport status (kept in sync with PetScreen).
+  const noteFor = (it) => {
+    if (it.id === 'vacc' && pet) {
+      const s = ({ full: 'график соблюдён', partial: 'статус «частично» — уточните', none: 'прививок нет', unknown: 'статус неизвестен' })[pet.vaccinations];
+      return s ? `Ревакцинация раз в&nbsp;год · ${s}` : it.note;
+    }
+    return it.note;
+  };
   const today = new Date();
   const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
   const fmtDate = (d) => {
@@ -81,7 +89,7 @@ function HealthScreen({ careItems = [], onMark, onBack, onTab, onChat, onHelp, o
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: tone, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{it.emoji}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--kk-ink)' }}>{it.label}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--kk-ink-3)', marginTop: 2 }} dangerouslySetInnerHTML={{ __html: it.note }}/>
+                    <div style={{ fontSize: 11.5, color: 'var(--kk-ink-3)', marginTop: 2 }} dangerouslySetInnerHTML={{ __html: noteFor(it) }}/>
                   </div>
                   {badge(st)}
                 </div>

@@ -21,6 +21,11 @@ function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, 
   const habLabel = ({ apartment: 'Квартира', house: 'Дом', outdoor: 'Двор', mixed: 'Смешанно' })[pet.habitat] || pet.habitat;
   const sterLabel = ({ yes: 'Да', no: 'Нет', unknown: 'Не знаю' })[pet.sterilized] || '—';
   const vacLabel = ({ full: 'Полный график', partial: 'Частично', none: 'Без прививок', unknown: 'Не знаю' })[pet.vaccinations] || '—';
+  // Live summary of the care calendar (Здоровье) — keeps the passport in sync with it.
+  const careOverdue = (careItems || []).filter(i => careStatusOf(i.dueInDays) === 'overdue').length;
+  const careSoon = (careItems || []).filter(i => careStatusOf(i.dueInDays) === 'soon').length;
+  const careSummary = careOverdue ? `${careOverdue} просрочено` : careSoon ? `${careSoon} скоро` : 'Всё по графику';
+  const careTone = careOverdue ? 'var(--kk-error-ink)' : careSoon ? 'var(--kk-warm-ink)' : 'var(--kk-ink-3)';
 
   return (
     <div className="kk-screen">
@@ -89,7 +94,15 @@ function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, 
         </PetSection>
 
         <PetSection title="Здоровье">
-          <PetRow label="Прививки" value={vacLabel} status="partial"/>
+          <button
+            onClick={onHealth}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '14px 0', borderBottom: '1px solid var(--kk-line)', borderTop: 0, borderLeft: 0, borderRight: 0, background: 'none', textAlign: 'left', cursor: 'pointer' }}
+          >
+            <span style={{ flex: 1, color: 'var(--kk-ink-3)', fontSize: 13 }}>График ухода</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: careTone }}>{careSummary}</span>
+            <IconChevron size={16} color="var(--kk-ink-4)"/>
+          </button>
+          <PetRow label="Прививки" value={vacLabel} status={pet.vaccinations === 'partial' ? 'partial' : null}/>
           <PetRow label="Переживания" value={pet.concerns || '—'} multi onEdit={() => startEdit('concerns', pet.concerns)}/>
         </PetSection>
 

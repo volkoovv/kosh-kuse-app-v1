@@ -84,8 +84,10 @@ function App() {
     });
   }
   // Mark a care item done → its next due date is pushed out by its period.
+  // Vaccination also syncs back to the passport status (partial → full).
   function markCareDone(id) {
     setCareItems(items => items.map(it => it.id === id ? { ...it, dueInDays: it.everyDays } : it));
+    if (id === 'vacc') setPet(p => ({ ...p, vaccinations: 'full' }));
     showToast('Отметил ✓ Напомню к&nbsp;следующему разу 🐾');
   }
   function goHealth() { setStage('main'); setTab('pet'); setPetPage('health'); }
@@ -337,6 +339,7 @@ function App() {
       } else if (petPage === 'health') {
         screen = (
           <HealthScreen
+            pet={pet}
             careItems={careItems}
             onMark={markCareDone}
             onBack={() => setPetPage(null)}
