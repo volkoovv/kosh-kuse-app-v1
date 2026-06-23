@@ -3,7 +3,7 @@
 const { useState: useStateS } = React;
 
 /* ─── Pet profile (read view + edit drawer) ─── */
-function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, showToast, onLogout, onHelp, onRefresh, onStatus, onBrelok }) {
+function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, showToast, onLogout, onHelp, onRefresh, onStatus, onBrelok, onHealth, careItems }) {
   const [editKey, setEditKey] = useStateS(null);
   const [draft, setDraft] = useStateS('');
 
@@ -39,7 +39,7 @@ function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, 
             </button>
           </div>
           <div style={{ fontSize: 12, color: 'var(--kk-ink-3)', marginTop: 4 }}>
-            {pet.sex === 'male' ? 'Кот' : 'Кошка'} · 3&nbsp;года · {pet.weight}&nbsp;кг
+            {pet.sex === 'male' ? 'Кот' : 'Кошка'} · {kkAgeLabel(pet)} · {pet.weight}&nbsp;кг
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
             <button className="kk-btn kk-btn-secondary kk-btn-sm" onClick={onChat}>
@@ -68,8 +68,8 @@ function PetScreen({ pet, setPet, onBack, onTab, onChat, onChatWith, openSheet, 
           </div>
         </div>
 
-        {/* GameFi: статус + брелок */}
-        <PetGameCards onStatus={onStatus} onBrelok={onBrelok}/>
+        {/* GameFi: здоровье + статус + брелок */}
+        <PetGameCards onStatus={onStatus} onBrelok={onBrelok} onHealth={onHealth} careItems={careItems}/>
 
         {/* Sections */}
         <PetSection title="Данные">

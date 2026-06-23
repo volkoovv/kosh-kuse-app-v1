@@ -138,8 +138,24 @@ function KKDeviceStage({ children }) {
   );
 }
 
+// ─── Pet age label, derived from birthday (or ageBand fallback).
+// Avoids the hardcoded "3 года" that used to drift when the date changed.
+function kkAgeLabel(pet) {
+  const p = pet || {};
+  const m = (p.birthday || '').match(/\d{4}/);
+  if (m) {
+    const age = new Date().getFullYear() - parseInt(m[0], 10);
+    if (age >= 0 && age < 40) {
+      const n = age % 100, d = age % 10;
+      const word = (n >= 11 && n <= 14) ? 'лет' : d === 1 ? 'год' : (d >= 2 && d <= 4) ? 'года' : 'лет';
+      return `${age} ${word}`;
+    }
+  }
+  return ({ '0-1': 'до 1 года', '1-3': '1–3 года', '3-7': '3–7 лет', '7+': 'старше 7' })[p.ageBand] || '';
+}
+
 Object.assign(window, {
-  KKStatus, KKTopBar, KKBottomNav, KKWordmark, KKDeviceStage, KKSheet, KKToast,
+  KKStatus, KKTopBar, KKBottomNav, KKWordmark, KKDeviceStage, KKSheet, KKToast, kkAgeLabel,
 });
 
 /* ─── Generic info / coming-soon / confirm sheet ─── */

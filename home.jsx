@@ -11,7 +11,7 @@ const STORIES = [
 { id: 'water', title: '5 фактов\nо&nbsp;воде', emoji: '💧', bg: '#D8F2F5' }];
 
 
-function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, proactiveSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName, planTasks }) {
+function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet, onOpenStatus, onHealth, proactiveSeen, storiesSeen, dismissProactive, notifCount, onNotif, onHelp, openSheet, showToast, todayDone, setTodayDone, userName, planTasks }) {
   const greetName = userName && userName.trim() || 'друг';
   return (
     <div className="kk-screen">
@@ -41,7 +41,7 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
       <div className="kk-stories">
         {STORIES.map((s) =>
         <button key={s.id} className="kk-story" onClick={() => onOpenStory(s.id)}>
-            <div className={`kk-story-ring ${proactiveSeen?.[s.id] ? 'is-seen' : ''}`}>
+            <div className={`kk-story-ring ${storiesSeen?.[s.id] ? 'is-seen' : ''}`}>
               <div className="kk-story-inner">
                 <div className="kk-story-inner-fill" style={{ background: s.bg }}>{s.emoji}</div>
               </div>
@@ -109,7 +109,7 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
             <div style={{ fontSize: 11, color: 'var(--kk-ink-3)', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 500, marginBottom: 4 }}>Питомец</div>
             <div style={{ fontSize: 17, fontWeight: 700 }}>{pet.name}</div>
             <div style={{ fontSize: 12, color: 'var(--kk-ink-3)', marginTop: 2 }}>
-              {pet.breed} · 3&nbsp;года · {pet.weight}&nbsp;кг
+              {pet.breed} · {kkAgeLabel(pet)} · {pet.weight}&nbsp;кг
             </div>
           </div>
           <IconChevron size={20} color="var(--kk-ink-4)" />
@@ -129,6 +129,7 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
               items: [
               { icon: <IconChat size={16} />, title: 'Спросить у&nbsp;Кусь', sub: 'AI ассистент', onClick: () => onChat() },
               { icon: <IconCat size={16} />, title: 'Паспорт питомца', sub: '8 заполнено · 2 на&nbsp;уточнение', onClick: () => onPet() },
+              { icon: <IconShield size={16} />, title: 'Здоровье', sub: 'Прививки, глистогонка, осмотры', onClick: () => onHealth && onHealth() },
               { icon: <IconBook size={16} />, title: 'База знаний', sub: '76 статей · породы, нормы', onClick: () => onTile('faq') },
               { icon: <IconHeart size={16} />, title: 'Ветеринар · скоро', sub: 'Появится в&nbsp;июле', onClick: () => onTile('soon-vet') },
               { icon: <IconGift size={16} />, title: 'Подписка на&nbsp;корм · скоро', sub: 'Появится в&nbsp;июле', onClick: () => onTile('soon-shop') }],
@@ -159,6 +160,16 @@ function HomeScreen({ pet, onOpenStory, onTab, onTile, onChat, onChatWith, onPet
             <div style={{ marginTop: 'auto' }}>
               <div className="kk-tile-title">Паспорт питомца</div>
               <div className="kk-tile-sub">8 заполнено · 2 на&nbsp;уточнение</div>
+            </div>
+          </button>
+
+          <button className="kk-tile" onClick={onHealth}>
+            <div className="kk-tile-icon" style={{ background: '#FFF' }}>
+              <IconShield size={20} />
+            </div>
+            <div style={{ marginTop: 'auto' }}>
+              <div className="kk-tile-title">Здоровье</div>
+              <div className="kk-tile-sub">Прививки, глистогонка, осмотры</div>
             </div>
           </button>
 

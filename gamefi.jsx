@@ -475,10 +475,29 @@ function FoundPetScreen({ pet, ownerName = 'Виктор', ownerPhone = '+7 999 
 }
 
 /* ─── compact entry cards for the Питомец profile ─── */
-function PetGameCards({ onStatus, onBrelok }) {
+function PetGameCards({ onStatus, onBrelok, onHealth, careItems = [] }) {
+  const overdue = careItems.filter(i => careStatusOf(i.dueInDays) === 'overdue').length;
+  const soon = careItems.filter(i => careStatusOf(i.dueInDays) === 'soon').length;
+  const healthLine = overdue ? `${overdue} просрочено` : soon ? `${soon} скоро` : 'Всё по графику';
+  const healthDot = overdue ? 'var(--kk-error-ink)' : soon ? 'var(--kk-warm-edge)' : 'var(--kk-success-ink)';
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 22 }}>
-      <button onClick={onStatus} style={{ textAlign: 'left', border: 0, cursor: 'pointer', background: 'var(--kk-bg-soft)', borderRadius: 16, padding: 14 }}>
+    <div style={{ marginBottom: 22 }}>
+      {/* Здоровье — полноширинная карточка (календарь ухода) */}
+      <button onClick={onHealth} style={{ width: '100%', textAlign: 'left', border: 0, cursor: 'pointer', background: 'var(--kk-bg-soft)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--kk-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <IconShield size={19} color="var(--kk-success-ink)"/>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, color: 'var(--kk-ink-3)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 500 }}>Здоровье · уход</div>
+          <div style={{ fontSize: 14.5, fontWeight: 700, marginTop: 2 }}>График ухода</div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--kk-ink-3)', marginTop: 3 }}>
+            <span style={{ width: 6, height: 6, borderRadius: 3, background: healthDot }}/>{healthLine}
+          </div>
+        </div>
+        <IconChevron size={16} color="var(--kk-ink-4)"/>
+      </button>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <button onClick={onStatus} style={{ textAlign: 'left', border: 0, cursor: 'pointer', background: 'var(--kk-bg-soft)', borderRadius: 16, padding: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--kk-pink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconTrophy size={17} color="#000"/></div>
           <IconChevron size={16} color="var(--kk-ink-4)"/>
@@ -502,6 +521,7 @@ function PetGameCards({ onStatus, onBrelok }) {
           <span style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--kk-pink-deep)' }}/>Первым 500 — бесплатно
         </div>
       </button>
+      </div>
     </div>
   );
 }

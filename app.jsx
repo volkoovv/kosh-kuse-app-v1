@@ -68,6 +68,7 @@ function App() {
   const [chatSeed, setChatSeed] = useStateA(null);  // when set, opens chat with prefilled message
   const [todayDone, setTodayDone] = useStateA({});
   const [planTasks, setPlanTasks] = useStateA([]);   // tasks produced by the "Составить план" flow → shown in «Сегодня»
+  const [careItems, setCareItems] = useStateA(CARE_SEED);   // health care calendar (Здоровье)
   const [articleId, setArticleId] = useStateA(null);   // when set, KB shows article view
   const [settingsPage, setSettingsPage] = useStateA(null);   // null | 'faq' | …
   const [petPage, setPetPage] = useStateA(null);   // null | 'status' | 'brelok'
@@ -82,6 +83,12 @@ function App() {
       return [...prev, ...(tasks || []).filter(t => !ids.has(t.id))];
     });
   }
+  // Mark a care item done → its next due date is pushed out by its period.
+  function markCareDone(id) {
+    setCareItems(items => items.map(it => it.id === id ? { ...it, dueInDays: it.everyDays } : it));
+    showToast('Отметил ✓ Напомню к&nbsp;следующему разу 🐾');
+  }
+  function goHealth() { setStage('main'); setTab('pet'); setPetPage('health'); }
   function showToast(msg) { setToast(msg); }
   function openChatWith(prefill) {
     setChatSeed(prefill || null);
@@ -150,7 +157,7 @@ function App() {
       screen = (
         <SplashScreen
           onPrimary={() => setStage('phone')}
-          onLogin={() => { setStage('phone'); }}
+          onLogin={() => setStage('login')}
         />
       );
     }
@@ -267,6 +274,8 @@ function App() {
           todayDone={todayDone}
           setTodayDone={setTodayDone}
           planTasks={planTasks}
+          onHealth={goHealth}
+          storiesSeen={seen}
           proactiveSeen={t.showProactive ? proactiveSeen : { activityCard: true }}
           dismissProactive={dismissProactive}
         />
@@ -325,6 +334,18 @@ function App() {
             onHelp={() => openSheet(HELP_SHEET(openChatWith, () => setTab('settings')))}
           />
         );
+      } else if (petPage === 'health') {
+        screen = (
+          <HealthScreen
+            careItems={careItems}
+            onMark={markCareDone}
+            onBack={() => setPetPage(null)}
+            onTab={(id) => { setPetPage(null); setTab(id); }}
+            onChat={(q) => openChatWith(q)}
+            openSheet={openSheet}
+            onHelp={() => openSheet(HELP_SHEET(openChatWith, () => setTab('settings')))}
+          />
+        );
       } else {
       screen = (
         <PetScreen
@@ -336,6 +357,8 @@ function App() {
           onTab={setTab}
           onStatus={() => setPetPage('status')}
           onBrelok={() => setPetPage('brelok')}
+          onHealth={() => setPetPage('health')}
+          careItems={careItems}
           openSheet={openSheet}
           showToast={showToast}
           onLogout={() => setStage('splash')}
@@ -351,6 +374,7 @@ function App() {
             onBack={() => setSettingsPage(null)}
             onTab={(id) => { setSettingsPage(null); setTab(id); }}
             onChat={(q) => openChatWith(q)}
+            showToast={showToast}
             onHelp={() => openSheet(HELP_SHEET(openChatWith, () => setTab('settings')))}
           />
         );
@@ -524,7 +548,7 @@ function App() {
           />
           <TweakButton
             label="Начать сначала"
-            onClick={() => { setStage('splash'); setTab('home'); setPetPage(null); setPet(DEFAULT_PET); }}
+            onClick={() => { setStage('splash'); setTab('home'); setPetPage(null); setPet(DEFAULT_PET); setPlanTasks([]); setCareItems(CARE_SEED); setTodayDone({}); }}
           />
           <TweakButton
             label="Сбросить уведомления и сторис"

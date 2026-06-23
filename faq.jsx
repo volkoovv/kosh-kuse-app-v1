@@ -141,7 +141,7 @@ const FAQ_ITEMS = [
   },
 ];
 
-function FAQScreen({ onBack, onTab, onChat, onHelp }) {
+function FAQScreen({ onBack, onTab, onChat, onHelp, showToast }) {
   const [query, setQuery] = useStateF('');
   const [cat, setCat] = useStateF('all');
   const [open, setOpen] = useStateF({});
@@ -244,6 +244,7 @@ function FAQScreen({ onBack, onTab, onChat, onHelp }) {
                     open={open[key]}
                     onToggle={() => toggle(key)}
                     onChat={onChat}
+                    showToast={showToast}
                     isLast={i === g.items.length - 1}
                   />
                 );
@@ -264,6 +265,7 @@ function FAQScreen({ onBack, onTab, onChat, onHelp }) {
                   open={open[key]}
                   onToggle={() => toggle(key)}
                   onChat={onChat}
+                  showToast={showToast}
                   isLast={i === filtered.length - 1}
                   showCat
                 />
@@ -308,7 +310,7 @@ function FAQScreen({ onBack, onTab, onChat, onHelp }) {
   );
 }
 
-function FAQRow({ item, open, onToggle, onChat, isLast, showCat }) {
+function FAQRow({ item, open, onToggle, onChat, isLast, showCat, showToast }) {
   const catLabel = (FAQ_CATS.find(c => c.id === item.cat) || {}).label;
   return (
     <div style={{ borderBottom: isLast ? 0 : '1px solid var(--kk-line)' }}>
@@ -358,7 +360,7 @@ function FAQRow({ item, open, onToggle, onChat, isLast, showCat }) {
             >Уточнить у&nbsp;Кусь</button>
             <button
               className="kk-chip kk-chip-outline"
-              onClick={() => alert('Спасибо за фидбек!')}
+              onClick={() => showToast && showToast('Спасибо за фидбек! 🐾')}
               style={{ height: 28, fontSize: 11 }}
             >👍 Полезно</button>
           </div>
